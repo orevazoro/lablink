@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunset Drive Board & Chat</title>
+    <title>LabLink - Sunset Drive</title>
+    <!-- URLs 100% Cleaned -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link id="dynamicFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>">
     
     <style>
         :root {
@@ -36,9 +39,8 @@
             border: 1px solid var(--glass-border); transition: opacity 0.2s;
         }
 
-        /* PANIC MODE CLASSES */
         .panic-mode body { background: #ffffff !important; }
-        .panic-mode #bgVideo, .panic-mode .container, .panic-mode #audioControlBtn { opacity: 0; pointer-events: none; }
+        .panic-mode #bgVideo, .panic-mode .container, .panic-mode #audioControlBtn { display: none !important; }
         
         #fakeScreen {
             display: none; position: fixed; top: 20px; left: 40px; 
@@ -46,7 +48,6 @@
         }
         .panic-mode #fakeScreen { display: block; }
 
-        /* Layout */
         .grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
         @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
         
@@ -86,20 +87,18 @@
         .btn-secondary { background: var(--accent-blue); color: #fff; }
         .btn-secondary:hover { background: #5ba1f2; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
         
-        /* Ghost Button */
         #ghostToggle { background: transparent; border: 1px solid #555; width: auto; padding: 0 10px; font-size: 1.2rem; transition: 0.2s;}
         #ghostToggle.active { background: rgba(255,255,255,0.2); border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5);}
 
-        /* Message Blocks */
         .message-block {
             background: rgba(255, 255, 255, 0.05); padding: 15px; margin-bottom: 12px;
             border-left: 4px solid var(--accent-blue); border-radius: 4px 8px 8px 4px;
             word-break: break-word; line-height: 1.5; font-size: 0.95rem; position: relative;
         }
         
-        /* CODE SNIPPET STYLING */
+        /* STRICT CSS FOR CODE BLOCKS TO PRESERVE INDENTATION */
         pre { background: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #333; overflow-x: auto; position: relative; }
-        code { font-family: 'Courier New', Courier, monospace; color: #a3f7bf; }
+        code { font-family: 'Courier New', Courier, monospace; color: #a3f7bf; white-space: pre; tab-size: 4; }
         .copy-code-btn {
             position: absolute; top: 5px; right: 5px; background: #333; color: #fff; border: none;
             padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; width: auto;
@@ -112,8 +111,9 @@
         .chat-admin { background: rgba(74, 144, 226, 0.1); padding: 5px 8px; border-radius: 4px;}
         
         .ghost-indicator { font-size: 0.7rem; color: #888; position: absolute; right: 5px; top: 5px;}
-
         .sys-msg { text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.4); font-style: italic; margin-bottom: 12px; }
+        
+        #ocrStatus { font-size: 0.85rem; color: #a3f7bf; font-style: italic; margin-bottom: 15px; display: none; }
         .hidden { display: none !important; }
         
         #audioControlBtn {
@@ -127,6 +127,14 @@
         
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .chat-controls { display: flex; gap: 5px; margin-bottom: 10px; }
+
+        /* Stealth Instructions Box */
+        .stealth-box {
+            margin-top:20px; padding: 15px; background: rgba(0,0,0,0.5); 
+            border-radius: 8px; font-size: 0.85rem; color: #ccc; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .stealth-box p { color:var(--accent-orange); font-weight:bold; margin:0 0 10px 0; font-size: 0.95rem;}
+        .stealth-box ul { padding-left: 20px; margin: 0; line-height: 1.6;}
     </style>
 </head>
 <body>
@@ -138,7 +146,7 @@
 <audio id="bgAudio" loop>
     <source src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
 </audio>
-
+<button id="audioControlBtn" onclick="toggleAudio()">🎧 Play Lo-Fi Beats</button>
 
 <!-- FAKE SCREEN FOR PANIC BUTTON -->
 <div id="fakeScreen">
@@ -161,18 +169,41 @@
         <input type="text" id="roomCodeInput" placeholder="e.g., 9999">
         
         <label>Select Role</label>
-        <select id="userRole" onchange="togglePinField()">
+        <select id="userRole" onchange="updateRoleUI()">
             <option value="member">Passenger (Read Only Feed, Can Chat)</option>
             <option value="admin">Driver (Can Write Feed & Control Chat)</option>
         </select>
+
+        <!-- NEW: Vibe Selector -->
+        <div id="vibeContainer">
+            <label>Choose Your Vibe</label>
+            <select id="userVibe">
+                <option value="Passenger Princess 👑">Passenger Princess 👑</option>
+                <option value="Aura Farmer ✨">Aura Farmer ✨</option>
+                <option value="Aux Cord DJ 🎧">Aux Cord DJ 🎧</option>
+                <option value="Backseat Coder 🤓">Backseat Coder 🤓</option>
+                <option value="Lookout Sniper 🕵️">Lookout Sniper 🕵️</option>
+                <option value="Stealth Ninja 🥷">Stealth Ninja 🥷</option>
+                <option value="Error Magnet 😭">Error Magnet 😭</option>
+            </select>
+        </div>
 
         <div id="pinContainer" class="hidden">
             <label style="color: var(--accent-orange);">Driver PIN</label>
             <input type="password" id="adminPinInput" placeholder="Enter PIN (Use: 7777)">
         </div>
 
-        <button onclick="joinRoom()">Connect</button>
-        <p style="text-align: center; color: #888; font-size: 0.8rem; margin-top: 20px;">Lab Safety: Press 'Esc' for Boss Key 🚨</p>
+        <button onclick="joinRoom()" style="margin-top: 15px;">Connect</button>
+        
+        <!-- NEW: Stealth Mode Instructions -->
+        <div class="stealth-box">
+            <p>🕵️ Lab Stealth Active</p>
+            <ul>
+                <li><b>Panic Key (Esc):</b> Hides app, turns screen to Wikipedia & disguises browser tab as "Google".</li>
+                <li><b>Auto-Camouflage:</b> If you switch to another tab, this tab auto-mutes and changes its name to "New Tab".</li>
+                <li><b>Kill Switch (Alt + X):</b> Emergency self-destruct! Instantly destroys the page into a 404 Error.</li>
+            </ul>
+        </div>
     </div>
 
     <!-- ✅ MAIN BOARD -->
@@ -185,10 +216,14 @@
             </div>
             
             <div id="adminPanel">
-                <textarea id="adminInput" placeholder="Broadcast a feed message (Markdown/Code supported)..."></textarea>
+                <textarea id="adminInput" placeholder="Broadcast a feed message (Auto-wraps multi-line code)..."></textarea>
+                <div id="ocrStatus"></div>
                 <div class="btn-group" style="margin-bottom: 15px;">
-                    <button onclick="sendUpdate()">Send Update 📡</button>
-                    <button class="btn-danger" onclick="clearBoard()">Clear Feed</button>
+                    <button onclick="sendUpdate()">Send 📡</button>
+                    <!-- OCR Image Scanner Button -->
+                    <button class="btn-secondary" onclick="document.getElementById('imageUploader').click()">Scan Image 📸</button>
+                    <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="processImageForText(this)">
+                    <button class="btn-danger" onclick="clearBoard()">Clear</button>
                 </div>
             </div>
 
@@ -228,6 +263,7 @@
 </div>
 
 <script>
+    // Cleaned Supabase URL without brackets
     const SUPABASE_URL = 'https://coqbrxxzuocxayxaqjns.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_ixPieDcjyzw7BL6oXGaWyw_6VIu3Mud';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -241,20 +277,77 @@
     let chatHistoryLog = []; 
     let isChatLocked = false;
     let isGhostMode = false;
+    let originalTitle = "LabLink - Sunset Drive";
+    let isPanic = false;
 
-    // --- PANIC BUTTON LOGIC ---
+    // --- STEALTH LOGIC ---
     document.addEventListener('keydown', (e) => {
+        // 1. Panic Button (Esc) - UI Hide + Tab Camouflage
         if (e.key === 'Escape') {
+            isPanic = !isPanic;
             document.documentElement.classList.toggle('panic-mode');
             const audio = document.getElementById('bgAudio');
-            if (audioPlaying) {
-                audio.pause();
-                const btn = document.getElementById('audioControlBtn');
-                btn.innerText = "🎧 Play Lo-Fi Beats";
-                audioPlaying = false;
+            const favicon = document.getElementById('dynamicFavicon');
+
+            if (isPanic) {
+                document.title = "Google";
+                favicon.href = "https://www.google.com/favicon.ico"; // Fake Google Icon
+                if (audioPlaying) { audio.pause(); document.getElementById('audioControlBtn').innerText = "🎧 Play Lo-Fi Beats"; audioPlaying = false; }
+            } else {
+                document.title = originalTitle;
+                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>";
+            }
+        }
+
+        // 3. Kill Switch (Alt + X) - Instant Page Destroy
+        if (e.altKey && (e.key === 'x' || e.key === 'X')) {
+            document.body.innerHTML = "<h1 style='color:black; font-family:Arial; padding:20px; font-weight:normal;'>404 Not Found</h1>";
+            document.body.style.background = "#fff";
+            document.title = "404 Not Found";
+        }
+    });
+
+    // 2. Auto-Ghost Mode (Tab switch detection)
+    document.addEventListener("visibilitychange", () => {
+        const favicon = document.getElementById('dynamicFavicon');
+        if (document.visibilityState === "hidden") {
+            // Teacher mode: when user leaves tab
+            document.title = "New Tab";
+            favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22></svg>"; // Blank icon
+            if(audioPlaying) { document.getElementById('bgAudio').pause(); }
+        } else {
+            // Returning to tab
+            if(!isPanic) {
+                document.title = originalTitle;
+                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>";
+            } else {
+                document.title = "Google";
+                favicon.href = "https://www.google.com/favicon.ico";
             }
         }
     });
+
+    // --- VIBES & ROLES ---
+    function updateRoleUI() {
+        const role = document.getElementById('userRole').value;
+        const vibeSelect = document.getElementById('userVibe');
+        
+        document.getElementById('pinContainer').classList.toggle('hidden', role !== 'admin');
+        
+        if(role === 'admin') {
+            vibeSelect.innerHTML = '<option value="The Getaway Driver 🏎️">The Getaway Driver 🏎️</option>';
+        } else {
+            vibeSelect.innerHTML = `
+                <option value="Passenger Princess 👑">Passenger Princess 👑</option>
+                <option value="Aura Farmer ✨">Aura Farmer ✨</option>
+                <option value="Aux Cord DJ 🎧">Aux Cord DJ 🎧</option>
+                <option value="Backseat Coder 🤓">Backseat Coder 🤓</option>
+                <option value="Lookout Sniper 🕵️">Lookout Sniper 🕵️</option>
+                <option value="Stealth Ninja 🥷">Stealth Ninja 🥷</option>
+                <option value="Error Magnet 😭">Error Magnet 😭</option>
+            `;
+        }
+    }
 
     let audioPlaying = false;
     function toggleAudio() {
@@ -265,14 +358,49 @@
         audioPlaying = !audioPlaying;
     }
 
-    function togglePinField() {
-        const role = document.getElementById('userRole').value;
-        document.getElementById('pinContainer').classList.toggle('hidden', role !== 'admin');
+    // --- OCR: AI IMAGE TO TEXT LOGIC ---
+    async function processImageForText(inputElement) {
+        if (!inputElement.files || inputElement.files.length === 0) return;
+        
+        const file = inputElement.files[0];
+        const statusEl = document.getElementById('ocrStatus');
+        const adminInput = document.getElementById('adminInput');
+        
+        statusEl.style.display = 'block';
+        statusEl.innerText = 'Initializing AI Scanner... ⏳';
+
+        try {
+            const worker = await Tesseract.createWorker("eng");
+            statusEl.innerText = 'Scanning image for text... 🔍 (This may take a few seconds)';
+            
+            const ret = await worker.recognize(file);
+            const extractedText = ret.data.text.trim();
+            
+            if(extractedText) {
+                adminInput.value += (adminInput.value ? '\n\n' : '') + extractedText;
+                statusEl.innerText = 'Scan Complete! ✅ Text pasted below.';
+            } else {
+                statusEl.innerText = 'No text found in the image. ⚠️';
+            }
+            
+            await worker.terminate();
+        } catch (error) {
+            console.error(error);
+            statusEl.innerText = 'Error scanning image. ❌';
+        }
+        
+        setTimeout(() => statusEl.style.display = 'none', 4000);
+        inputElement.value = '';
     }
 
     function joinRoom() {
         const code = document.getElementById('roomCodeInput').value.trim();
-        myName = document.getElementById('userNameInput').value.trim() || 'Passenger';
+        let rawName = document.getElementById('userNameInput').value.trim() || 'Anonymous';
+        let selectedVibe = document.getElementById('userVibe').value;
+        
+        // Combining name and vibe!
+        myName = `${rawName} [${selectedVibe}]`;
+        
         currentRole = document.getElementById('userRole').value;
         const pin = document.getElementById('adminPinInput').value;
         
@@ -352,33 +480,27 @@
         });
     }
 
-    // --- FIX: CODE SNIPPET FORMATTING FOR LATEST MARKED.JS ---
+    // --- FIX: BASE64 ENCODING FOR PERFECT CODE FORMATTING ---
     const renderer = new marked.Renderer();
     renderer.code = function(arg1) {
-        // Newer marked.js passes a token object, older passes a string
         const codeText = typeof arg1 === 'object' ? arg1.text : arg1;
         if (!codeText) return '';
         
-        // Escape quotes AND linebreaks to prevent HTML/JS breaking in the onclick attribute
-        const safeCode = codeText
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/\n/g, '\\n')
-            .replace(/\r/g, '');
-            
-        // Escape for display (so < and > don't break the UI)
+        const base64Code = btoa(unescape(encodeURIComponent(codeText)));
         const displayCode = codeText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         
-        return `<pre><code>${displayCode}</code><button class="copy-code-btn" onclick="copySnippet('${safeCode}')">Copy Code</button></pre>`;
+        return `<pre><code>${displayCode}</code><button class="copy-code-btn" onclick="copyBase64Snippet('${base64Code}')">Copy Code</button></pre>`;
     };
-    
-    // Apply the custom renderer
     marked.use({ renderer: renderer });
 
-    function copySnippet(codeText) {
-        // Unescape before copying back to clipboard
-        const originalText = codeText.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
-        navigator.clipboard.writeText(originalText).then(() => alert("Code Snippet Copied!"));
+    function copyBase64Snippet(base64Text) {
+        try {
+            const originalText = decodeURIComponent(escape(atob(base64Text)));
+            navigator.clipboard.writeText(originalText).then(() => alert("Code Snippet Copied!"));
+        } catch(e) {
+            console.error("Error decoding snippet", e);
+            alert("Failed to copy code.");
+        }
     }
 
     function renderFeedMessage(text) {
@@ -393,15 +515,20 @@
 
     function sendUpdate() {
         if (currentRole !== 'admin') return;
-        const text = document.getElementById('adminInput').value;
+        let text = document.getElementById('adminInput').value;
         if (!text.trim()) return; 
+
+        // --- SMART AUTO-WRAP LOGIC ---
+        if (text.includes('\n') && !text.includes('```')) {
+            text = '```\n' + text + '\n```';
+        }
+
         room.send({ type: 'broadcast', event: 'board-update', payload: { message: text } });
         renderFeedMessage(text);
         adminHistoryLog.push(text); 
         document.getElementById('adminInput').value = ''; 
     }
 
-    // --- GHOST CHAT LOGIC ---
     function toggleGhost() {
         isGhostMode = !isGhostMode;
         document.getElementById('ghostToggle').classList.toggle('active', isGhostMode);
@@ -412,8 +539,13 @@
     function sendChat() {
         if (isChatLocked && currentRole !== 'admin') return; 
         const input = document.getElementById('chatInput');
-        const text = input.value.trim();
+        let text = input.value.trim();
         if (!text) return;
+
+        // --- SMART AUTO-WRAP LOGIC ---
+        if (text.includes('\n') && !text.includes('```')) {
+            text = '```\n' + text + '\n```';
+        }
 
         const msgId = 'msg-' + Date.now();
         const payloadData = { id: msgId, sender: myName, text: text, role: currentRole, isGhost: isGhostMode };
