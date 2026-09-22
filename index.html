@@ -277,27 +277,27 @@
                 <option value="theme-eclipse">Eclipse IDE (Java Classic)</option>
                 <option value="theme-sunset">Sunset Drive (Stealth Legacy)</option>
             </select>
-            <!-- NEW PiP BUTTON -->
             <button onclick="togglePiP()" class="btn-secondary" style="width: auto; padding: 5px 10px; font-size: 0.85rem;" title="Pop Out to Always-on-Top Window"><i class='bx bx-windows'></i> PiP Mode</button>
         </div>
     </div>
 
+    <!-- FIXED LOGIN SECTION: Clear Labels for Access Code and Roles -->
     <div id="joinSection">
-        <label>Developer Alias</label>
+        <label>Your Alias (Name)</label>
         <input type="text" id="userNameInput" placeholder="e.g., student_01">
 
-        <label>Workspace Port (Encryption Key)</label>
+        <label>Access Code (Port / Encryption Key)</label>
         <input type="text" id="roomCodeInput" placeholder="e.g., 8080">
         
-        <label>Access Level</label>
+        <label>Select Role</label>
         <select id="userRole" onchange="updateRoleUI()">
-            <option value="member">Read-Only Observer (Can Terminal Chat)</option>
-            <option value="admin">Root Access (Write to Main Editor)</option>
+            <option value="member">Passenger (Read-Only Observer)</option>
+            <option value="admin">Driver (Root Access / Editor)</option>
         </select>
 
         <div id="pinContainer" class="hidden">
-            <label style="color: var(--accent-danger);">Root Password (Use: 7777)</label>
-            <input type="password" id="adminPinInput" placeholder="Enter root password">
+            <label style="color: var(--accent-danger);">Driver PIN (Use: 7777)</label>
+            <input type="password" id="adminPinInput" placeholder="Enter PIN">
         </div>
 
         <button onclick="joinRoom()" style="margin-top: 15px;"><i class='bx bx-link'></i> Connect Securely</button>
@@ -451,12 +451,12 @@
 
             pipWindow.document.body.className = document.body.className;
             pipWindow.document.body.style.padding = "5px";
-            pipWindow.document.body.style.display = "block"; // Override flex centering for tight window
+            pipWindow.document.body.style.display = "block"; 
             
-            pipWindow.document.body.appendChild(container); // Move UI to PiP
+            pipWindow.document.body.appendChild(container);
 
             pipWindow.addEventListener("pagehide", () => {
-                document.body.appendChild(container); // Move it back when closed
+                document.body.appendChild(container); 
             });
         } catch (err) { console.error("PiP failed: ", err); }
     }
@@ -466,7 +466,6 @@
     let scrollSpeed = 0;
     const appContainer = document.getElementById('mainContainerApp');
 
-    // Double Shift Trigger
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Shift') {
             const now = new Date().getTime();
@@ -476,7 +475,6 @@
             lastShiftTime = now;
         }
         
-        // Existing keydown hooks
         if (e.key === 'Escape') {
             isPanic = !isPanic;
             isTypingActive = false; 
@@ -509,13 +507,11 @@
         if(e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) e.preventDefault();
     });
 
-    // Fast Scroll Trigger
     window.addEventListener('wheel', (e) => {
         scrollSpeed = Math.abs(e.deltaY);
         if (scrollSpeed > 200) { appContainer.classList.add('ghost-fade'); }
     });
 
-    // Mousemove completely removes ghost fade
     window.addEventListener('mousemove', () => {
         if(appContainer.classList.contains('ghost-fade')) appContainer.classList.remove('ghost-fade');
     });
@@ -599,7 +595,6 @@
         audioPlaying = !audioPlaying;
     }
 
-    // --- GHOST TYPER LOGIC ---
     async function startGhostTyper() {
         if (!lastAiCode) return alert("Generate code first!");
         if (isTypingActive) return;
@@ -875,8 +870,8 @@
         currentRole = document.getElementById('userRole').value;
         const pin = document.getElementById('adminPinInput').value;
         
-        if (!code) return alert("Required: Workspace Port.");
-        if (currentRole === 'admin' && pin !== '7777') return alert("Authentication Failed.");
+        if (!code) return alert("Required: Access Code.");
+        if (currentRole === 'admin' && pin !== '7777') return alert("Access Denied: Invalid Driver PIN.");
 
         roomSecretKey = code; 
 
