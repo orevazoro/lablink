@@ -3,141 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LabLink - Sunset Drive</title>
-    <!-- URLs 100% Cleaned -->
+    <title>Lab Workspace</title>
+    
+    <!-- Core Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link id="dynamicFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>">
+    <!-- Encryption Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link id="dynamicFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
     
     <style>
-        :root {
-            --glass-bg: rgba(20, 15, 25, 0.65); 
-            --glass-border: rgba(255, 120, 80, 0.3);
-            --text-light: #f5e6e6; --text-muted: #b8a5b1;
-            --accent-orange: #ff6b35; --accent-blue: #4a90e2; --btn-hover: #ff8b5a;
+        /* --- DYNAMIC THEME SYSTEM --- */
+        
+        :root, body.theme-vscode {
+            --bg-body: #111111;
+            --bg-container: #1e1e1e;
+            --bg-panel: #252526;
+            --bg-input: #3c3c3c;
+            --border-color: #333333;
+            --text-main: #d4d4d4;
+            --text-muted: #858585;
+            --accent-main: #007acc;
+            --accent-hover: #005f9e;
+            --accent-danger: #f14c4c;
+            --accent-success: #89d185;
+            --font-main: 'Fira Code', 'Consolas', monospace;
+            --radius: 0px;
+            --shadow: none;
+            --msg-bg: transparent;
+            --msg-border: 1px dashed #333;
+        }
+
+        body.theme-jupyter {
+            --bg-body: #e0e0e0;
+            --bg-container: #f3f3f3;
+            --bg-panel: #ffffff;
+            --bg-input: #ffffff;
+            --border-color: #cfcfcf;
+            --text-main: #212121;
+            --text-muted: #757575;
+            --accent-main: #1976d2;
+            --accent-hover: #1565c0;
+            --accent-danger: #d32f2f;
+            --accent-success: #388e3c;
+            --font-main: 'Helvetica Neue', 'Inter', Arial, sans-serif;
+            --radius: 4px;
+            --shadow: 0 2px 10px rgba(0,0,0,0.05);
+            --msg-bg: #ffffff;
+            --msg-border: 1px solid #e0e0e0;
+        }
+
+        body.theme-eclipse {
+            --bg-body: #d4d0c8;
+            --bg-container: #e8e8e8;
+            --bg-panel: #ffffff;
+            --bg-input: #ffffff;
+            --border-color: #a0a0a0;
+            --text-main: #000000;
+            --text-muted: #555555;
+            --accent-main: #0052a3;
+            --accent-hover: #003d7a;
+            --accent-danger: #b30000;
+            --accent-success: #007300;
+            --font-main: 'Segoe UI', Tahoma, sans-serif;
+            --radius: 0px;
+            --shadow: inset 1px 1px 0px #fff, 1px 1px 0px #888;
+            --msg-bg: #f9f9f9;
+            --msg-border: 1px solid #ccc;
+        }
+
+        body.theme-sunset {
+            --bg-body: #000;
+            --bg-container: rgba(20, 15, 25, 0.65);
+            --bg-panel: rgba(0, 0, 0, 0.3);
+            --bg-input: rgba(0, 0, 0, 0.4);
+            --border-color: rgba(255, 120, 80, 0.3);
+            --text-main: #f5e6e6;
+            --text-muted: #b8a5b1;
+            --accent-main: #ff6b35;
+            --accent-hover: #ff8b5a;
+            --accent-danger: #ff4757;
+            --accent-success: #2ecc71;
+            --font-main: 'Inter', sans-serif;
+            --radius: 12px;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            --msg-bg: rgba(255, 255, 255, 0.05);
+            --msg-border: none;
         }
 
         body {
-            font-family: 'Inter', sans-serif; margin: 0; padding: 20px;
-            color: var(--text-light); min-height: 100vh;
+            font-family: var(--font-main); margin: 0; padding: 20px;
+            color: var(--text-main); min-height: 100vh;
             display: flex; justify-content: center; align-items: flex-start; 
-            padding-top: 5vh; transition: background 0.2s;
+            background-color: var(--bg-body); transition: all 0.3s ease;
+            overflow-x: hidden; padding-top: 5vh;
         }
 
-        #bgVideo {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            object-fit: cover; z-index: -1; transition: opacity 0.2s;
-        }
+        #bgVideo, #audioControlBtn { display: none; }
+        body.theme-sunset #bgVideo { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
+        body.theme-sunset #audioControlBtn { display: block; }
+        body.theme-sunset .container { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 
         .container {
-            width: 100%; max-width: 1000px; 
-            background: var(--glass-bg); padding: 30px; border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 107, 53, 0.1);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border); transition: opacity 0.2s;
+            width: 100%; max-width: 1100px; 
+            background: var(--bg-container); padding: 25px; 
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        /* GHOST FADE CLASS (BOSS KEY) */
+        .ghost-fade {
+            opacity: 0.03 !important;
+            pointer-events: none !important;
+            filter: grayscale(100%);
+            transition: opacity 0.3s ease-in-out !important;
+        }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+        }
+        .theme-selector {
+            background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);
+            padding: 5px 10px; border-radius: 4px; font-family: var(--font-main); font-size: 0.85rem; cursor: pointer;
         }
 
         .panic-mode body { background: #ffffff !important; }
-        .panic-mode #bgVideo, .panic-mode .container, .panic-mode #audioControlBtn { display: none !important; }
-        
-        #fakeScreen {
-            display: none; position: fixed; top: 20px; left: 40px; 
-            color: #333; font-family: Arial, sans-serif;
-        }
+        .panic-mode #bgVideo, .panic-mode .container, .panic-mode #audioControlBtn, .panic-mode .top-bar { display: none !important; }
+        #fakeScreen { display: none; position: fixed; top: 20px; left: 40px; color: #333; font-family: Arial, sans-serif; }
         .panic-mode #fakeScreen { display: block; }
 
-        .grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
+        #bsodScreen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0078D7; color: white; z-index: 999999; flex-direction: column; justify-content: center; align-items: flex-start; padding: 10%; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        #bsodScreen h1 { font-size: 100px; margin-bottom: 20px; font-weight: normal; }
+        
+        .grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
         
-        .header-info {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px;
-        }
-
-        h2 { margin: 0; color: #fff; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px; }
-        .live-count { color: var(--accent-orange); font-weight: 600; font-size: 0.95rem; }
+        h2 { margin: 0; color: var(--text-main); font-size: 1.2rem; font-weight: 600; }
+        .live-count { color: var(--accent-success); font-weight: bold; font-size: 0.85rem; }
         
         input[type="text"], input[type="password"], textarea, select {
-            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(0, 0, 0, 0.4); color: #fff; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; transition: 0.2s;
+            width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; 
+            border: 1px solid var(--border-color); background: var(--bg-input); 
+            color: var(--text-main); box-sizing: border-box; font-family: inherit; font-size: 0.9rem;
         }
-        ::placeholder { color: rgba(255,255,255,0.4); }
-        select option { background: #222; color: #fff; }
-        textarea { height: 100px; resize: vertical; line-height: 1.5; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-orange); box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2); background: rgba(0,0,0,0.6); }
+        ::placeholder { color: var(--text-muted); }
+        textarea { height: 120px; resize: vertical; line-height: 1.5; font-family: var(--font-main); }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent-main); }
         
-        .board-display, .chat-display {
-            background: rgba(0, 0, 0, 0.3); padding: 20px; border-radius: 8px; margin-bottom: 15px;
-            border: 1px solid rgba(255,255,255,0.05); max-height: 400px; overflow-y: auto;
+        .tab-header { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { 
+            background: transparent; color: var(--text-muted); font-size: 0.95rem; padding: 8px 15px; 
+            border-radius: var(--radius) var(--radius) 0 0; transition: 0.2s; border: none; width: auto;
+        }
+        .tab-btn.active { background: var(--bg-panel); color: var(--text-main); border-bottom: 2px solid var(--accent-main); }
+        .tab-btn:hover:not(.active) { background: var(--bg-input); }
+
+        .board-display, .chat-display, .ai-display {
+            background: var(--bg-panel); padding: 15px; border-radius: var(--radius); margin-bottom: 15px;
+            border: 1px solid var(--border-color); max-height: 350px; overflow-y: auto; scroll-behavior: smooth;
         }
         .board-display { min-height: 250px; }
         .chat-display { height: 300px; display: flex; flex-direction: column; }
         
-        button {
-            padding: 10px 20px; cursor: pointer; background: var(--accent-orange); color: #fff;
-            border: none; border-radius: 8px; font-weight: 700; transition: 0.3s; width: 100%; font-family: inherit; font-size: 1rem;
+        #executionResult {
+            background: #000; color: #0f0; padding: 12px; border-radius: 4px; font-family: 'Consolas', monospace;
+            border: 1px solid #333; min-height: 80px; max-height: 400px; overflow-y: auto; margin-top: 15px; white-space: pre-wrap; font-size: 0.85rem;
         }
-        button:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); }
-        button:disabled { background: #555; cursor: not-allowed; transform: none; box-shadow: none; color: #888; }
+
+        button {
+            padding: 8px 15px; cursor: pointer; background: var(--accent-main); color: #fff;
+            border: none; border-radius: 4px; font-weight: 600; transition: 0.2s; width: 100%; font-family: inherit; font-size: 0.9rem;
+        }
+        button:hover { background: var(--accent-hover); }
+        button:disabled { background: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
         
-        .btn-danger { background: transparent; border: 1px solid #ff4757; color: #ff4757; }
-        .btn-danger:hover { background: rgba(255, 71, 87, 0.1); box-shadow: none; }
-        .btn-secondary { background: var(--accent-blue); color: #fff; }
-        .btn-secondary:hover { background: #5ba1f2; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); }
+        .btn-danger { background: transparent; border: 1px solid var(--accent-danger); color: var(--accent-danger); }
+        .btn-danger:hover { background: var(--accent-danger); color: #fff; }
+        .btn-secondary { background: transparent; border: 1px solid var(--accent-main); color: var(--accent-main); }
+        .btn-secondary:hover { background: var(--accent-main); color: #fff; }
+        .btn-success { background: var(--accent-success); color: #fff; }
+        .btn-purple { background: #9b59b6; color: #fff; }
         
-        #ghostToggle { background: transparent; border: 1px solid #555; width: auto; padding: 0 10px; font-size: 1.2rem; transition: 0.2s;}
-        #ghostToggle.active { background: rgba(255,255,255,0.2); border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5);}
+        #ghostToggle { background: transparent; border: 1px solid var(--border-color); width: auto; padding: 0 10px; font-size: 1.2rem;}
+        #ghostToggle.active { background: var(--accent-danger); border-color: var(--accent-danger); color: #fff;}
 
         .message-block {
-            background: rgba(255, 255, 255, 0.05); padding: 15px; margin-bottom: 12px;
-            border-left: 4px solid var(--accent-blue); border-radius: 4px 8px 8px 4px;
-            word-break: break-word; line-height: 1.5; font-size: 0.95rem; position: relative;
+            background: var(--msg-bg); padding: 12px; margin-bottom: 10px;
+            border-left: 3px solid var(--accent-main); border-radius: var(--radius);
+            border-bottom: var(--msg-border); border-top: var(--msg-border); border-right: var(--msg-border);
+            word-break: break-word; line-height: 1.5; font-size: 0.9rem; position: relative;
         }
         
-        /* STRICT CSS FOR CODE BLOCKS TO PRESERVE INDENTATION */
-        pre { background: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #333; overflow-x: auto; position: relative; }
-        code { font-family: 'Courier New', Courier, monospace; color: #a3f7bf; white-space: pre; tab-size: 4; }
-        .copy-code-btn {
-            position: absolute; top: 5px; right: 5px; background: #333; color: #fff; border: none;
-            padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; width: auto;
-        }
-        .copy-code-btn:hover { background: #555; transform: none;}
+        body.theme-jupyter .message-block { border-left: none; padding-left: 45px; }
+        body.theme-jupyter .message-block::before { content: 'In []: '; position: absolute; left: 5px; top: 12px; color: #2196F3; font-weight: bold; font-family: monospace; font-size: 0.8rem;}
 
-        .chat-msg { margin-bottom: 10px; font-size: 0.9rem; line-height: 1.4; word-break: break-word; position: relative; }
-        .chat-sender { font-weight: 700; color: var(--accent-orange); font-size: 0.85rem; display: block; margin-bottom: 2px;}
-        .chat-admin .chat-sender { color: var(--accent-blue); } 
-        .chat-admin { background: rgba(74, 144, 226, 0.1); padding: 5px 8px; border-radius: 4px;}
+        pre { background: #1a1a1a; padding: 12px; border-radius: 4px; border: 1px solid #333; overflow-x: auto; position: relative; }
+        code { font-family: 'Fira Code', 'Consolas', monospace; color: #9cdcfe; white-space: pre; tab-size: 4; }
+        .copy-code-btn { position: absolute; top: 5px; right: 5px; background: #333; color: #fff; border: none; padding: 4px 8px; font-size: 0.7rem; border-radius: 2px; cursor: pointer; width: auto; }
         
-        .ghost-indicator { font-size: 0.7rem; color: #888; position: absolute; right: 5px; top: 5px;}
-        .sys-msg { text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.4); font-style: italic; margin-bottom: 12px; }
+        .chat-msg { margin-bottom: 8px; font-size: 0.85rem; line-height: 1.4; word-break: break-word; position: relative; font-family: var(--font-main);}
+        .chat-sender { font-weight: bold; color: var(--accent-main); display: inline-block; margin-right: 5px;}
+        body.theme-vscode .chat-sender::after { content: ' ~$'; color: #858585; font-weight: normal; }
+        body.theme-eclipse .chat-sender::after { content: ': '; color: #555; }
         
-        #ocrStatus { font-size: 0.85rem; color: #a3f7bf; font-style: italic; margin-bottom: 15px; display: none; }
+        .chat-admin .chat-sender { color: var(--accent-success); } 
+        
+        .ghost-indicator { font-size: 0.7rem; color: #888; position: absolute; right: 5px; top: 2px;}
+        .sys-msg { text-align: center; font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 10px; }
+        .typing-indicator { font-size: 0.8rem; color: var(--accent-main); font-style: italic; display: none; margin-bottom: 5px;}
+        
+        #ocrStatus { font-size: 0.8rem; color: var(--accent-success); font-style: italic; margin-bottom: 10px; display: none; }
         .hidden { display: none !important; }
         
         #audioControlBtn {
-            position: fixed; bottom: 25px; right: 25px; width: auto; padding: 12px 20px; font-size: 0.95rem; background: rgba(0, 0, 0, 0.6);
-            color: var(--text-light); border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; z-index: 100; backdrop-filter: blur(8px);
+            position: fixed; bottom: 25px; right: 25px; width: auto; padding: 10px 15px; font-size: 0.85rem; background: rgba(0, 0, 0, 0.6);
+            color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 50px; z-index: 100; backdrop-filter: blur(8px);
         }
-        label { font-weight: 600; margin-bottom: 6px; display: block; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;}
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        label { font-weight: 600; margin-bottom: 5px; display: block; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;}
         
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-container); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .chat-controls { display: flex; gap: 5px; margin-bottom: 10px; }
 
-        /* Stealth Instructions Box */
         .stealth-box {
-            margin-top:20px; padding: 15px; background: rgba(0,0,0,0.5); 
-            border-radius: 8px; font-size: 0.85rem; color: #ccc; border: 1px solid rgba(255,255,255,0.1);
+            margin-top:20px; padding: 15px; background: var(--bg-panel); 
+            border-radius: var(--radius); font-size: 0.85rem; color: var(--text-muted); border: 1px solid var(--border-color);
         }
-        .stealth-box p { color:var(--accent-orange); font-weight:bold; margin:0 0 10px 0; font-size: 0.95rem;}
-        .stealth-box ul { padding-left: 20px; margin: 0; line-height: 1.6;}
     </style>
 </head>
-<body>
+<body class="theme-vscode">
 
 <video id="bgVideo" autoplay loop muted playsinline>
     <source src="evening-drive-and-windmills.3840x2160.mp4" type="video/mp4">
@@ -146,180 +251,317 @@
 <audio id="bgAudio" loop>
     <source src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
 </audio>
-<button id="audioControlBtn" onclick="toggleAudio()">🎧 Play Lo-Fi Beats</button>
+<button id="audioControlBtn" onclick="toggleAudio()">🎧 Play Audio</button>
 
-<!-- FAKE SCREEN FOR PANIC BUTTON -->
 <div id="fakeScreen">
     <h1 style="color:#1a0dab; font-size:24px; font-weight:normal;">Introduction to HTML - Wikipedia</h1>
     <p style="color:#545454; font-size:14px; max-width: 600px; line-height: 1.6;">
-        HyperText Markup Language (HTML) is the standard markup language for documents designed to be displayed in a web browser. It is often assisted by technologies such as Cascading Style Sheets (CSS) and scripting languages such as JavaScript.
+        HyperText Markup Language (HTML) is the standard markup language for documents designed to be displayed in a web browser.
     </p>
 </div>
 
-<div class="container">
-    
-    <!-- 🛑 JOIN SCREEN -->
-    <div id="joinSection">
-        <div class="header-info"><h2>SYS.LOGIN</h2></div>
-        
-        <label>Your Alias (Name)</label>
-        <input type="text" id="userNameInput" placeholder="e.g., CyberPunk_99">
+<div id="bsodScreen">
+    <h1>:(</h1>
+    <p>Your PC ran into a problem and needs to restart. We're just collecting some error info...</p>
+    <p>25% complete</p>
+    <p style="font-size:16px; margin-top:30px; color:#ccc;">Stop code: CRITICAL_PROCESS_DIED</p>
+</div>
 
-        <label>Access Code</label>
-        <input type="text" id="roomCodeInput" placeholder="e.g., 9999">
+<div class="container" id="mainContainerApp">
+    <div class="top-bar">
+        <h2 style="font-size: 1rem;"><i class='bx bx-code-alt'></i> Workspace Environment</h2>
+        <div style="display: flex; gap: 10px;">
+            <select class="theme-selector" id="themeSelect" onchange="changeTheme(this.value)">
+                <option value="theme-vscode">Visual Studio Code (Dark)</option>
+                <option value="theme-jupyter">Jupyter Notebook (Data Science)</option>
+                <option value="theme-eclipse">Eclipse IDE (Java Classic)</option>
+                <option value="theme-sunset">Sunset Drive (Stealth Legacy)</option>
+            </select>
+            <!-- NEW PiP BUTTON -->
+            <button onclick="togglePiP()" class="btn-secondary" style="width: auto; padding: 5px 10px; font-size: 0.85rem;" title="Pop Out to Always-on-Top Window"><i class='bx bx-windows'></i> PiP Mode</button>
+        </div>
+    </div>
+
+    <div id="joinSection">
+        <label>Developer Alias</label>
+        <input type="text" id="userNameInput" placeholder="e.g., student_01">
+
+        <label>Workspace Port (Encryption Key)</label>
+        <input type="text" id="roomCodeInput" placeholder="e.g., 8080">
         
-        <label>Select Role</label>
+        <label>Access Level</label>
         <select id="userRole" onchange="updateRoleUI()">
-            <option value="member">Passenger (Read Only Feed, Can Chat)</option>
-            <option value="admin">Driver (Can Write Feed & Control Chat)</option>
+            <option value="member">Read-Only Observer (Can Terminal Chat)</option>
+            <option value="admin">Root Access (Write to Main Editor)</option>
         </select>
 
-        <!-- NEW: Vibe Selector -->
-        <div id="vibeContainer">
-            <label>Choose Your Vibe</label>
-            <select id="userVibe">
-                <option value="Passenger Princess 👑">Passenger Princess 👑</option>
-                <option value="Aura Farmer ✨">Aura Farmer ✨</option>
-                <option value="Aux Cord DJ 🎧">Aux Cord DJ 🎧</option>
-                <option value="Backseat Coder 🤓">Backseat Coder 🤓</option>
-                <option value="Lookout Sniper 🕵️">Lookout Sniper 🕵️</option>
-                <option value="Stealth Ninja 🥷">Stealth Ninja 🥷</option>
-                <option value="Error Magnet 😭">Error Magnet 😭</option>
-            </select>
-        </div>
-
         <div id="pinContainer" class="hidden">
-            <label style="color: var(--accent-orange);">Driver PIN</label>
-            <input type="password" id="adminPinInput" placeholder="Enter PIN (Use: 7777)">
+            <label style="color: var(--accent-danger);">Root Password (Use: 7777)</label>
+            <input type="password" id="adminPinInput" placeholder="Enter root password">
         </div>
 
-        <button onclick="joinRoom()" style="margin-top: 15px;">Connect</button>
+        <button onclick="joinRoom()" style="margin-top: 15px;"><i class='bx bx-link'></i> Connect Securely</button>
         
-        <!-- NEW: Stealth Mode Instructions -->
         <div class="stealth-box">
-            <p>🕵️ Lab Stealth Active</p>
-            <ul>
-                <li><b>Panic Key (Esc):</b> Hides app, turns screen to Wikipedia & disguises browser tab as "Google".</li>
-                <li><b>Auto-Camouflage:</b> If you switch to another tab, this tab auto-mutes and changes its name to "New Tab".</li>
-                <li><b>Kill Switch (Alt + X):</b> Emergency self-destruct! Instantly destroys the page into a 404 Error.</li>
+            <p style="color: var(--text-main); font-weight: bold; margin-bottom: 5px;"><i class='bx bx-shield-quarter'></i> Stealth Protocols Active</p>
+            <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                <li><b>PiP Mode:</b> Pops out the app into a tiny draggable floating window!</li>
+                <li><b>Ghost-Fade (Boss Key):</b> Double-Tap <code>Shift</code> OR Scroll super fast to make the app invisible.</li>
+                <li><b>Ghost-Typer:</b> AI types code like a human (with fake typos).</li>
+                <li><b>Panic Keys:</b> <code>Esc</code> (Google) | <code>F4</code> (BSOD).</li>
             </ul>
         </div>
     </div>
 
-    <!-- ✅ MAIN BOARD -->
-    <div id="mainBoardSection" class="hidden grid-layout">
+    <div id="mainBoardContainer" class="hidden">
         
-        <!-- COLUMN 1: LIVE FEED -->
-        <div class="feed-column">
-            <div class="header-info">
-                <h2>Live Feed <span class="room-display" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 400;"></span></h2>
-            </div>
-            
-            <div id="adminPanel">
-                <textarea id="adminInput" placeholder="Broadcast a feed message (Auto-wraps multi-line code)..."></textarea>
-                <div id="ocrStatus"></div>
-                <div class="btn-group" style="margin-bottom: 15px;">
-                    <button onclick="sendUpdate()">Send 📡</button>
-                    <!-- OCR Image Scanner Button -->
-                    <button class="btn-secondary" onclick="document.getElementById('imageUploader').click()">Scan Image 📸</button>
-                    <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="processImageForText(this)">
-                    <button class="btn-danger" onclick="clearBoard()">Clear</button>
+        <div class="tab-header">
+            <button id="tabLiveBtn" class="tab-btn active" onclick="switchTab('live')"><i class='bx bx-file-blank'></i> main_editor.js</button>
+            <button id="tabAiBtn" class="tab-btn" onclick="switchTab('ai')"><i class='bx bx-bot'></i> ai_copilot.py <span style="font-size:0.75rem; opacity:0.6;">(Ctrl+Space)</span></button>
+        </div>
+
+        <!-- LIVE SECTION -->
+        <div id="liveSection" class="grid-layout">
+            <div class="feed-column">
+                <div class="header-info" style="margin-bottom: 10px; border:none; padding:0;">
+                    <h2 style="font-size: 0.95rem; opacity: 0.8;">Editor Source <span class="room-display"></span></h2>
                 </div>
+                
+                <div id="adminPanel">
+                    <textarea id="adminInput" placeholder="Write code or use /docs https://url.com to embed a browser pane..."></textarea>
+                    <div id="ocrStatus"></div>
+                    <div class="btn-group" style="margin-bottom: 15px;">
+                        <button onclick="sendUpdate()" style="width: auto;"><i class='bx bx-send'></i> Push</button>
+                        <button class="btn-secondary" onclick="document.getElementById('imageUploader').click()" style="width: auto;"><i class='bx bx-camera'></i> Scan</button>
+                        <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="processImageForText(this)">
+                        
+                        <button class="btn-purple" onclick="document.getElementById('fileDropper').click()" style="width: auto;"><i class='bx bx-upload'></i> Drop File</button>
+                        <input type="file" id="fileDropper" style="display: none;" onchange="handleFileDrop(this)">
+                        
+                        <button class="btn-danger" onclick="clearBoard()" style="width: auto;"><i class='bx bx-trash'></i></button>
+                    </div>
+                </div>
+
+                <div id="boardDisplay" class="board-display">
+                    <div id="emptyFeedMessage" class="sys-msg">Waiting for code sync...</div>
+                </div>
+                
+                <button class="btn-secondary" onclick="downloadLog()" style="font-size: 0.8rem; padding: 5px;"><i class='bx bx-download'></i> Download Workspace.zip</button>
             </div>
 
-            <div id="boardDisplay" class="board-display">
-                <div id="emptyFeedMessage" class="sys-msg">Awaiting feed transmission...</div>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn-secondary" onclick="downloadLog()">Download Session 💾</button>
+            <div class="chat-column">
+                <div class="header-info" style="margin-bottom: 10px; border:none; padding:0;">
+                    <h2 style="font-size: 0.95rem; opacity: 0.8;">Integrated Terminal</h2>
+                    <div id="liveCount" class="live-count">Port: Active [1]</div>
+                </div>
+
+                <div id="adminChatControls" class="chat-controls hidden">
+                    <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px;" onclick="toggleChatLock()" id="lockChatBtn"><i class='bx bx-lock-alt'></i> Lock</button>
+                    <button class="btn-danger" style="font-size: 0.75rem; padding: 4px;" onclick="clearChat()"><i class='bx bx-brush'></i> Clear</button>
+                </div>
+
+                <div id="chatDisplay" class="chat-display">
+                    <div id="emptyChatMessage" class="sys-msg">Terminal initialized.</div>
+                    <div id="typingIndicator" class="typing-indicator">Process running...</div>
+                </div>
+
+                <div style="display: flex; gap: 5px;">
+                    <button id="ghostToggle" title="Auto-Delete Mode" onclick="toggleGhost()"><i class='bx bx-ghost'></i></button>
+                    <input type="text" id="chatInput" placeholder="bash: type command..." oninput="handleTypingEvent()" onkeypress="handleChatEnter(event)" style="margin-bottom: 0;">
+                    <button id="sendChatBtn" onclick="sendChat()" style="width: auto; padding: 0 15px;"><i class='bx bx-right-arrow-alt'></i></button>
+                </div>
             </div>
         </div>
 
-        <!-- COLUMN 2: CHAT -->
-        <div class="chat-column">
-            <div class="header-info">
-                <h2>Comms (Chat)</h2>
-                <div id="liveCount" class="live-count">⚡ 1</div>
+        <!-- AI CO-PILOT SECTION -->
+        <div id="aiSection" class="hidden">
+            <div class="header-info" style="border-bottom:none; margin-bottom:10px;">
+                <h2 style="font-size: 0.95rem; opacity: 0.8;">AI Co-Pilot Console [Strictly Code Output]</h2>
+            </div>
+            
+            <textarea id="aiInput" placeholder="Enter logic requirement (e.g., Write python logic for... )"></textarea>
+            
+            <div class="btn-group" style="margin-bottom: 20px;">
+                <button onclick="askAI()" style="width: auto;"><i class='bx bx-bolt-circle'></i> Generate</button>
+                <button id="autoTypeBtn" class="btn-secondary hidden" onclick="startGhostTyper()" style="width: auto;"><i class='bx bx-keyboard'></i> Auto-Type</button>
+                
+                <button id="runCodeBtn" class="btn-secondary hidden" onclick="runAiCode()" style="width: auto;"><i class='bx bx-play'></i> Run Local</button>
+                <button id="previewUiBtn" class="btn-purple hidden" onclick="previewAiCode()" style="width: auto;"><i class='bx bx-layout'></i> Render UI</button>
+                <button id="pushFeedBtn" class="hidden btn-success" onclick="pushAiToFeed()" style="width: auto;"><i class='bx bx-upload'></i> Push to Editor</button>
+            </div>
+            
+            <div id="aiOutput" class="ai-display">
+                <div class="sys-msg" style="margin-top:20px;">Awaiting compilation instructions...</div>
             </div>
 
-            <div id="adminChatControls" class="chat-controls hidden">
-                <button class="btn-secondary" style="font-size: 0.8rem; padding: 6px;" onclick="toggleChatLock()" id="lockChatBtn">Lock Chat 🔒</button>
-                <button class="btn-danger" style="font-size: 0.8rem; padding: 6px;" onclick="clearChat()">Clear Chat 🧹</button>
-            </div>
-
-            <div id="chatDisplay" class="chat-display">
-                <div id="emptyChatMessage" class="sys-msg">Chat room is empty. Say hi!</div>
-            </div>
-
-            <div style="display: flex; gap: 8px;">
-                <button id="ghostToggle" title="Ghost Mode (Auto Delete after 15s)" onclick="toggleGhost()">👻</button>
-                <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="handleChatEnter(event)" style="margin-bottom: 0;">
-                <button id="sendChatBtn" onclick="sendChat()" style="width: auto; padding: 0 15px;">▶</button>
-            </div>
+            <pre id="executionResult" class="hidden"></pre>
         </div>
 
     </div>
 </div>
 
 <script>
-    // Cleaned Supabase URL without brackets
-    const SUPABASE_URL = 'https://coqbrxxzuocxayxaqjns.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_ixPieDcjyzw7BL6oXGaWyw_6VIu3Mud';
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- THEME SWITCHER LOGIC ---
+    function changeTheme(themeName) {
+        document.body.className = themeName;
+        localStorage.setItem('lablink_theme', themeName);
+    }
+    const savedTheme = localStorage.getItem('lablink_theme');
+    if (savedTheme) {
+        document.getElementById('themeSelect').value = savedTheme;
+        changeTheme(savedTheme);
+    }
 
-    let room; 
-    let currentRole = 'member';
-    let myName = 'Unknown User';
-    let myUserId = 'user-' + Math.random().toString(36).substr(2, 9);
-    
-    let adminHistoryLog = []; 
-    let chatHistoryLog = []; 
-    let isChatLocked = false;
-    let isGhostMode = false;
-    let originalTitle = "LabLink - Sunset Drive";
-    let isPanic = false;
+    // --- NEW: PiP (Picture-in-Picture) MINI-APP LOGIC ---
+    async function togglePiP() {
+        if (!('documentPictureInPicture' in window)) {
+            alert("PiP Mode is not supported in this browser. Please use Chrome 116+ or Edge.");
+            return;
+        }
+        
+        const container = document.getElementById('mainContainerApp');
+        
+        if (window.documentPictureInPicture.window) {
+            window.documentPictureInPicture.window.close();
+            return;
+        }
 
-    // --- STEALTH LOGIC ---
+        try {
+            const pipWindow = await window.documentPictureInPicture.requestWindow({ width: 450, height: 650 });
+
+            // Copy CSS over to the new floating window
+            [...document.styleSheets].forEach((styleSheet) => {
+                try {
+                    const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                    const style = document.createElement('style');
+                    style.textContent = cssRules;
+                    pipWindow.document.head.appendChild(style);
+                } catch (e) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet'; link.type = styleSheet.type; link.media = styleSheet.media; link.href = styleSheet.href;
+                    pipWindow.document.head.appendChild(link);
+                }
+            });
+            
+            // Add fonts and icons
+            pipWindow.document.head.innerHTML += `
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+                <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+            `;
+
+            pipWindow.document.body.className = document.body.className;
+            pipWindow.document.body.style.padding = "5px";
+            pipWindow.document.body.style.display = "block"; // Override flex centering for tight window
+            
+            pipWindow.document.body.appendChild(container); // Move UI to PiP
+
+            pipWindow.addEventListener("pagehide", () => {
+                document.body.appendChild(container); // Move it back when closed
+            });
+        } catch (err) { console.error("PiP failed: ", err); }
+    }
+
+    // --- NEW: GHOST-FADE (BOSS KEY & FAST SCROLL) ---
+    let lastShiftTime = 0;
+    let scrollSpeed = 0;
+    const appContainer = document.getElementById('mainContainerApp');
+
+    // Double Shift Trigger
     document.addEventListener('keydown', (e) => {
-        // 1. Panic Button (Esc) - UI Hide + Tab Camouflage
+        if (e.key === 'Shift') {
+            const now = new Date().getTime();
+            if (now - lastShiftTime < 300) {
+                appContainer.classList.toggle('ghost-fade');
+            }
+            lastShiftTime = now;
+        }
+        
+        // Existing keydown hooks
         if (e.key === 'Escape') {
             isPanic = !isPanic;
+            isTypingActive = false; 
             document.documentElement.classList.toggle('panic-mode');
             const audio = document.getElementById('bgAudio');
             const favicon = document.getElementById('dynamicFavicon');
-
             if (isPanic) {
                 document.title = "Google";
-                favicon.href = "https://www.google.com/favicon.ico"; // Fake Google Icon
-                if (audioPlaying) { audio.pause(); document.getElementById('audioControlBtn').innerText = "🎧 Play Lo-Fi Beats"; audioPlaying = false; }
+                favicon.href = "https://www.google.com/favicon.ico"; 
+                if (audioPlaying) { audio.pause(); document.getElementById('audioControlBtn').innerText = "🎧 Play Audio"; audioPlaying = false; }
             } else {
                 document.title = originalTitle;
-                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>";
+                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>";
             }
         }
-
-        // 3. Kill Switch (Alt + X) - Instant Page Destroy
+        if (e.key === 'F4') {
+            e.preventDefault();
+            document.getElementById('bsodScreen').style.display = 'flex';
+            if (audioPlaying) { document.getElementById('bgAudio').pause(); audioPlaying = false; }
+        }
         if (e.altKey && (e.key === 'x' || e.key === 'X')) {
             document.body.innerHTML = "<h1 style='color:black; font-family:Arial; padding:20px; font-weight:normal;'>404 Not Found</h1>";
             document.body.style.background = "#fff";
             document.title = "404 Not Found";
         }
+        if (e.ctrlKey && e.code === 'Space') {
+            e.preventDefault();
+            if(!document.getElementById('mainBoardContainer').classList.contains('hidden')) switchTab(currentTab === 'live' ? 'ai' : 'live');
+        }
+        if(e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) e.preventDefault();
     });
 
-    // 2. Auto-Ghost Mode (Tab switch detection)
+    // Fast Scroll Trigger
+    window.addEventListener('wheel', (e) => {
+        scrollSpeed = Math.abs(e.deltaY);
+        if (scrollSpeed > 200) { appContainer.classList.add('ghost-fade'); }
+    });
+
+    // Mousemove completely removes ghost fade
+    window.addEventListener('mousemove', () => {
+        if(appContainer.classList.contains('ghost-fade')) appContainer.classList.remove('ghost-fade');
+    });
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    const SUPABASE_URL = 'https://coqbrxxzuocxayxaqjns.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_ixPieDcjyzw7BL6oXGaWyw_6VIu3Mud';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let room; 
+    let roomSecretKey = ''; 
+    let currentRole = 'member';
+    let myName = 'Unknown';
+    let myUserId = 'dev-' + Math.random().toString(36).substr(2, 9);
+    
+    let adminHistoryLog = []; 
+    let chatHistoryLog = [];  
+    let isChatLocked = false;
+    let isGhostMode = false;
+    let originalTitle = "Lab Workspace";
+    let isPanic = false;
+    let isTypingActive = false; 
+    let typingTimer;
+    let currentTab = 'live';
+    let lastAiCode = ""; 
+
+    function encryptData(text) { return CryptoJS.AES.encrypt(text, roomSecretKey).toString(); }
+    function decryptData(ciphertext) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(ciphertext, roomSecretKey);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            return decrypted || "[Data Corrupt]";
+        } catch(e) { return "[Encrypted Content]"; }
+    }
+
     document.addEventListener("visibilitychange", () => {
         const favicon = document.getElementById('dynamicFavicon');
         if (document.visibilityState === "hidden") {
-            // Teacher mode: when user leaves tab
             document.title = "New Tab";
-            favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22></svg>"; // Blank icon
+            favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22></svg>"; 
             if(audioPlaying) { document.getElementById('bgAudio').pause(); }
         } else {
-            // Returning to tab
             if(!isPanic) {
                 document.title = originalTitle;
-                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌅</text></svg>";
+                favicon.href = "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>";
             } else {
                 document.title = "Google";
                 favicon.href = "https://www.google.com/favicon.ico";
@@ -327,102 +569,337 @@
         }
     });
 
-    // --- VIBES & ROLES ---
+    function switchTab(tab) {
+        currentTab = tab;
+        if(tab === 'live') {
+            document.getElementById('liveSection').classList.remove('hidden');
+            document.getElementById('aiSection').classList.add('hidden');
+            document.getElementById('tabLiveBtn').classList.add('active');
+            document.getElementById('tabAiBtn').classList.remove('active');
+        } else {
+            document.getElementById('liveSection').classList.add('hidden');
+            document.getElementById('aiSection').classList.remove('hidden');
+            document.getElementById('tabLiveBtn').classList.remove('active');
+            document.getElementById('tabAiBtn').classList.add('active');
+            if (currentRole === 'admin') document.getElementById('pushFeedBtn').classList.remove('hidden');
+        }
+    }
+
     function updateRoleUI() {
         const role = document.getElementById('userRole').value;
-        const vibeSelect = document.getElementById('userVibe');
-        
         document.getElementById('pinContainer').classList.toggle('hidden', role !== 'admin');
-        
-        if(role === 'admin') {
-            vibeSelect.innerHTML = '<option value="The Getaway Driver 🏎️">The Getaway Driver 🏎️</option>';
-        } else {
-            vibeSelect.innerHTML = `
-                <option value="Passenger Princess 👑">Passenger Princess 👑</option>
-                <option value="Aura Farmer ✨">Aura Farmer ✨</option>
-                <option value="Aux Cord DJ 🎧">Aux Cord DJ 🎧</option>
-                <option value="Backseat Coder 🤓">Backseat Coder 🤓</option>
-                <option value="Lookout Sniper 🕵️">Lookout Sniper 🕵️</option>
-                <option value="Stealth Ninja 🥷">Stealth Ninja 🥷</option>
-                <option value="Error Magnet 😭">Error Magnet 😭</option>
-            `;
-        }
     }
 
     let audioPlaying = false;
     function toggleAudio() {
         const audio = document.getElementById('bgAudio');
         const btn = document.getElementById('audioControlBtn');
-        if(audioPlaying) { audio.pause(); btn.innerText = "🎧 Play Lo-Fi Beats"; } 
+        if(audioPlaying) { audio.pause(); btn.innerText = "🎧 Play Audio"; } 
         else { audio.play(); audio.volume = 0.5; btn.innerText = "⏸️ Pause Audio"; }
         audioPlaying = !audioPlaying;
     }
 
-    // --- OCR: AI IMAGE TO TEXT LOGIC ---
+    // --- GHOST TYPER LOGIC ---
+    async function startGhostTyper() {
+        if (!lastAiCode) return alert("Generate code first!");
+        if (isTypingActive) return;
+        
+        switchTab('live');
+        
+        const match = lastAiCode.match(/```(\w+)?\n([\s\S]*?)```/);
+        const codeToType = match ? match[2] : lastAiCode;
+        const targetInput = document.getElementById('adminInput');
+        
+        targetInput.value = "";
+        targetInput.focus();
+        isTypingActive = true;
+        
+        const typos = "abcdefghijklmnopqrstuvwxyz";
+        
+        for (let i = 0; i < codeToType.length; i++) {
+            if (!isTypingActive) break; 
+            let char = codeToType[i];
+            
+            if (Math.random() < 0.04 && /[a-zA-Z]/.test(char)) {
+                const typoChar = typos[Math.floor(Math.random() * typos.length)];
+                targetInput.value += typoChar;
+                await new Promise(r => setTimeout(r, 150 + Math.random() * 100)); 
+                targetInput.value = targetInput.value.slice(0, -1); 
+                await new Promise(r => setTimeout(r, 100 + Math.random() * 80)); 
+            }
+            
+            targetInput.value += char;
+            targetInput.scrollTop = targetInput.scrollHeight; 
+            let delay = 25 + Math.random() * 40; 
+            if (char === '\n') delay += 150; 
+            await new Promise(r => setTimeout(r, delay));
+        }
+        isTypingActive = false;
+    }
+
+    function handleFileDrop(inputElement) {
+        if (!inputElement.files || inputElement.files.length === 0) return;
+        const file = inputElement.files[0];
+        if (file.size > 200 * 1024) { alert("File too large for stealth proxy transmission (Max 200KB)."); inputElement.value = ''; return; }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Data = e.target.result;
+            const fileHtml = `<div style="background: var(--bg-input); padding: 10px; border-radius: 4px; border: 1px dashed var(--accent-main); text-align: center; margin-top: 5px;"><span style="font-size: 2rem;">📦</span><br><b style="color:var(--text-main);">${file.name}</b><br><a href="${base64Data}" download="${file.name}" style="display: inline-block; margin-top: 5px; padding: 5px 15px; background: var(--accent-main); color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.85rem;">Download</a></div>`;
+            room.send({ type: 'broadcast', event: 'board-update', payload: { message: encryptData(fileHtml) } });
+            renderFeedMessage(fileHtml);
+            adminHistoryLog.push(fileHtml); 
+            inputElement.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
     async function processImageForText(inputElement) {
         if (!inputElement.files || inputElement.files.length === 0) return;
-        
         const file = inputElement.files[0];
         const statusEl = document.getElementById('ocrStatus');
         const adminInput = document.getElementById('adminInput');
-        
         statusEl.style.display = 'block';
-        statusEl.innerText = 'Initializing AI Scanner... ⏳';
+        statusEl.innerText = 'Initializing OCR Scanner... ⏳';
 
         try {
             const worker = await Tesseract.createWorker("eng");
-            statusEl.innerText = 'Scanning image for text... 🔍 (This may take a few seconds)';
-            
+            statusEl.innerText = 'Extracting code from image... 🔍';
             const ret = await worker.recognize(file);
-            const extractedText = ret.data.text.trim();
-            
-            if(extractedText) {
-                adminInput.value += (adminInput.value ? '\n\n' : '') + extractedText;
-                statusEl.innerText = 'Scan Complete! ✅ Text pasted below.';
-            } else {
-                statusEl.innerText = 'No text found in the image. ⚠️';
-            }
-            
+            if(ret.data.text.trim()) {
+                adminInput.value += (adminInput.value ? '\n\n' : '') + ret.data.text.trim();
+                statusEl.innerText = 'Extraction Complete! ✅';
+            } else { statusEl.innerText = 'No text detected. ⚠️'; }
             await worker.terminate();
-        } catch (error) {
-            console.error(error);
-            statusEl.innerText = 'Error scanning image. ❌';
-        }
-        
+        } catch (error) { statusEl.innerText = 'OCR Failed. ❌'; }
         setTimeout(() => statusEl.style.display = 'none', 4000);
         inputElement.value = '';
     }
 
+    async function askAI() {
+        const input = document.getElementById('aiInput');
+        const output = document.getElementById('aiOutput');
+        const query = input.value.trim();
+        
+        if(!query) return alert("Define parameters first!");
+
+        let apiKey = localStorage.getItem('openrouter_api_key');
+        if (!apiKey) {
+            apiKey = prompt("Lab Setup: Enter OpenRouter API Key:");
+            if (!apiKey) return; 
+            localStorage.setItem('openrouter_api_key', apiKey.trim());
+        }
+
+        output.innerHTML = "<div class='sys-msg'>Routing request through secure nodes... ⏳</div>";
+        document.getElementById('executionResult').classList.add('hidden');
+        document.getElementById('runCodeBtn').classList.add('hidden');
+        document.getElementById('previewUiBtn').classList.add('hidden');
+        document.getElementById('autoTypeBtn').classList.add('hidden');
+        input.disabled = true;
+
+        const systemInstruction = "You are an automated code generator. Output ONLY raw functional code. STRICTLY NO comments. Use exactly 4 spaces for indentation. Do not write any English text or explanations. Output MUST be wrapped in markdown code blocks. CRITICAL: Write code like an average college student. Avoid advanced methods (no list comprehensions, ternary operators, or complex built-ins). Use basic for-loops, long if-else blocks, and simple variable names like temp, flag, i, j, ans, or calc. Code should look slightly naive but fully functional.";
+
+       const freeModels = [
+            "cohere/north-mini-code:free",
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "google/gemma-4-26b-a4b-it:free",
+            "inclusionai/ling-3.0-flash-vl:free",
+            "meta-llama/llama-3.1-8b-instruct:free",
+            "mistralai/mistral-7b-instruct:free",
+            "microsoft/phi-3-mini-128k-instruct:free"
+        ];
+
+        let success = false;
+        let aiResponse = "";
+
+        for (let i = 0; i < freeModels.length; i++) {
+            try {
+                const response = await fetch(`https://openrouter.ai/api/v1/chat/completions`, {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`,
+                        "HTTP-Referer": window.location.href, 
+                        "X-Title": "Lab Workspace"
+                    },
+                    body: JSON.stringify({
+                        model: freeModels[i], 
+                        messages: [
+                            { role: "system", content: systemInstruction },
+                            { role: "user", content: query }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.status === 401 || response.status === 403) {
+                     localStorage.removeItem('openrouter_api_key');
+                     output.innerHTML = "<div class='sys-msg' style='color:#ff4757;'>Error: Invalid Authentication Key.</div>";
+                     input.disabled = false;
+                     return;
+                }
+                if (data.error) continue; 
+
+                aiResponse = data.choices[0].message.content;
+                success = true;
+                break; 
+            } catch (e) {}
+        }
+
+        if (success) {
+            lastAiCode = aiResponse;
+            output.innerHTML = marked.parse(lastAiCode);
+            document.getElementById('runCodeBtn').classList.remove('hidden');
+            
+            if(currentRole === 'admin') {
+                document.getElementById('autoTypeBtn').classList.remove('hidden');
+            }
+            
+            const match = lastAiCode.match(/```(\w+)?\n([\s\S]*?)```/);
+            if(match && (match[1] === 'html' || match[1] === 'xml' || lastAiCode.includes('<html'))) {
+                document.getElementById('previewUiBtn').classList.remove('hidden');
+            }
+        } else {
+            output.innerHTML = "<div class='sys-msg' style='color:#ff4757;'>Error: API Nodes Offline. ⚠️</div>";
+        }
+        input.disabled = false;
+    }
+
+    function previewAiCode() {
+        if (!lastAiCode) return;
+        const match = lastAiCode.match(/```(\w+)?\n([\s\S]*?)```/);
+        if (!match) return;
+        let code = match[2];
+        
+        const resultBox = document.getElementById('executionResult');
+        resultBox.classList.remove('hidden');
+        resultBox.innerHTML = ''; 
+        
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '400px';
+        iframe.style.backgroundColor = '#fff';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '4px';
+        resultBox.appendChild(iframe);
+        
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(code);
+        iframe.contentWindow.document.close();
+    }
+
+    async function runAiCode() {
+        if (!lastAiCode) return alert("No executable sequence loaded.");
+        const match = lastAiCode.match(/```(\w+)?\n([\s\S]*?)```/);
+        if (!match) return alert("Syntax parser failed.");
+        let lang = (match[1] || 'python').toLowerCase();
+        let code = match[2];
+        
+        const resultBox = document.getElementById('executionResult');
+        resultBox.classList.remove('hidden');
+        if(resultBox.querySelector('iframe')) resultBox.innerHTML = '';
+        
+        resultBox.innerText = `> Initializing environment: ${lang.toUpperCase()}...`;
+
+        try {
+            if (lang === 'javascript' || lang === 'js') {
+                let output = "";
+                const originalLog = console.log;
+                console.log = (...args) => { output += args.join(" ") + "\n"; }; 
+                try {
+                    new Function(code)(); 
+                    resultBox.innerText = "> Execution Completed:\n" + (output || "[No Console Output]");
+                } catch (err) { resultBox.innerText = "> Runtime Error:\n" + err.message; }
+                console.log = originalLog; 
+
+            } else if (lang === 'python' || lang === 'py') {
+                if (!window.loadPyodide) {
+                    resultBox.innerText = "> Fetching Pyodide Engine to cache... ⏳";
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js";
+                    document.head.appendChild(script);
+                    await new Promise(resolve => script.onload = resolve);
+                }
+                
+                resultBox.innerText = "> Executing Python WASM Instance...";
+                if (!window.pyodide) window.pyodide = await loadPyodide();
+                
+                window.pyodide.runPython(`import sys, io\nsys.stdout = io.StringIO()\nsys.stderr = io.StringIO()`);
+                
+                try {
+                    await window.pyodide.runPythonAsync(code);
+                    let out = window.pyodide.runPython("sys.stdout.getvalue()");
+                    let err = window.pyodide.runPython("sys.stderr.getvalue()");
+                    
+                    if(err) resultBox.innerText = "> Python Traceback:\n" + err;
+                    else resultBox.innerText = "> Execution Completed:\n" + (out || "[No Console Output]");
+                } catch (err) { resultBox.innerText = "> Execution Error:\n" + err; }
+                
+            } else if (lang === 'java' || lang === 'c' || lang === 'cpp' || lang === 'c++') {
+                resultBox.innerText = `> Bypassing local firewall via ThingProxy for ${lang.toUpperCase()}... ⏳`;
+                const langMap = { 'java': 'java', 'c': 'c', 'cpp': 'c++', 'c++': 'c++' };
+                const verMap = { 'java': '15.0.2', 'c': '10.2.0', 'cpp': '10.2.0', 'c++': '10.2.0' };
+                const proxy = 'https://thingproxy.freeboard.io/fetch/';
+                const target = 'https://emacs.piston.rs/api/v2/execute';
+                
+                const res = await fetch(proxy + target, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ language: langMap[lang], version: verMap[lang], files: [{ content: code }] })
+                });
+                const data = await res.json();
+                if (data.run) resultBox.innerText = "> Execution Completed:\n" + (data.run.output || "[No Console Output]");
+                else resultBox.innerText = "> Compilation Failed:\n" + (data.message || "Unknown proxy error.");
+            } else {
+                resultBox.innerText = `> Compiler not found for: ${lang}`;
+            }
+        } catch (e) { resultBox.innerText = "> Sandbox Crash:\n" + e.message; }
+    }
+
+    function pushAiToFeed() {
+        if (currentRole !== 'admin') return;
+        if (!lastAiCode) return;
+        
+        room.send({ type: 'broadcast', event: 'board-update', payload: { message: encryptData(lastAiCode) } });
+        renderFeedMessage(lastAiCode);
+        adminHistoryLog.push(lastAiCode); 
+        switchTab('live');
+    }
+
     function joinRoom() {
         const code = document.getElementById('roomCodeInput').value.trim();
-        let rawName = document.getElementById('userNameInput').value.trim() || 'Anonymous';
-        let selectedVibe = document.getElementById('userVibe').value;
+        let rawName = document.getElementById('userNameInput').value.trim() || 'dev_usr';
         
-        // Combining name and vibe!
-        myName = `${rawName} [${selectedVibe}]`;
-        
+        myName = rawName;
         currentRole = document.getElementById('userRole').value;
         const pin = document.getElementById('adminPinInput').value;
         
-        if (!code) return alert("Please enter an access code.");
-        if (currentRole === 'admin' && pin !== '7777') return alert("Access Denied: Invalid PIN.");
+        if (!code) return alert("Required: Workspace Port.");
+        if (currentRole === 'admin' && pin !== '7777') return alert("Authentication Failed.");
+
+        roomSecretKey = code; 
 
         document.getElementById('joinSection').classList.add('hidden');
-        document.getElementById('mainBoardSection').classList.remove('hidden');
+        document.getElementById('mainBoardContainer').classList.remove('hidden');
         
         if (currentRole === 'member') document.getElementById('adminPanel').classList.add('hidden');
         else document.getElementById('adminChatControls').classList.remove('hidden');
 
-        room = supabaseClient.channel('sunset-room-' + code, { config: { presence: { key: myUserId } } });
+        room = supabaseClient.channel('workspace-' + code, { config: { presence: { key: myUserId } } });
 
         room.on('broadcast', { event: 'board-update' }, (payload) => {
-            renderFeedMessage(payload.payload.message);
-            if(currentRole === 'admin') adminHistoryLog.push(payload.payload.message);
+            const decryptedMsg = decryptData(payload.payload.message);
+            renderFeedMessage(decryptedMsg);
+            if(currentRole === 'admin') adminHistoryLog.push(decryptedMsg);
         });
 
         room.on('broadcast', { event: 'chat-message' }, (payload) => {
-            renderChatMessage(payload.payload.sender, payload.payload.text, payload.payload.role, payload.payload.id, payload.payload.isGhost);
-            if(currentRole === 'admin' && !payload.payload.isGhost) chatHistoryLog.push(payload.payload);
+            const decryptedText = decryptData(payload.payload.text);
+            renderChatMessage(payload.payload.sender, decryptedText, payload.payload.role, payload.payload.id, payload.payload.isGhost);
+            if(currentRole === 'admin' && !payload.payload.isGhost) {
+                chatHistoryLog.push({...payload.payload, text: decryptedText});
+            }
         });
         
         room.on('broadcast', { event: 'delete-chat' }, (payload) => {
@@ -432,12 +909,12 @@
         });
 
         room.on('broadcast', { event: 'clear-board' }, () => {
-            document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Feed cleared by Driver.</div>';
+            document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Editor wiped by Admin.</div>';
             if(currentRole === 'admin') adminHistoryLog = [];
         });
 
         room.on('broadcast', { event: 'clear-chat' }, () => {
-            document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Chat cleared by Driver.</div>';
+            document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Terminal logs cleared.</div><div id="typingIndicator" class="typing-indicator">Process running...</div>';
             if(currentRole === 'admin') chatHistoryLog = [];
         });
 
@@ -445,15 +922,25 @@
             isChatLocked = payload.payload.locked; updateChatLockUI();
         });
 
+        room.on('broadcast', { event: 'typing' }, (payload) => {
+            if(payload.payload.sender !== myName) {
+                const indicator = document.getElementById('typingIndicator');
+                indicator.innerText = `${payload.payload.sender} is executing...`;
+                indicator.style.display = 'block';
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+            }
+        });
+
         room.on('broadcast', { event: 'sync-history' }, (payload) => {
             if (currentRole === 'member') {
                 document.getElementById('boardDisplay').innerHTML = '';
-                if(payload.payload.feedHistory.length === 0) document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Awaiting transmission...</div>';
-                else payload.payload.feedHistory.forEach(msg => renderFeedMessage(msg));
+                if(payload.payload.feedHistory.length === 0) document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Waiting for code sync...</div>';
+                else payload.payload.feedHistory.forEach(msg => renderFeedMessage(decryptData(msg)));
                 
                 document.getElementById('chatDisplay').innerHTML = '';
-                if(payload.payload.chatHistory.length === 0) document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Chat room is empty.</div>';
-                else payload.payload.chatHistory.forEach(msg => renderChatMessage(msg.sender, msg.text, msg.role, msg.id, msg.isGhost));
+                if(payload.payload.chatHistory.length === 0) document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Terminal initialized.</div>';
+                else payload.payload.chatHistory.forEach(msg => renderChatMessage(msg.sender, decryptData(msg.text), msg.role, msg.id, msg.isGhost));
 
                 isChatLocked = payload.payload.chatLocked; updateChatLockUI();
             }
@@ -463,50 +950,58 @@
             const state = room.presenceState();
             let totalUsers = 0; let adminExists = false; let existingAdminId = null;
             for (const id in state) { totalUsers += state[id].length; if (state[id][0].role === 'admin') { adminExists = true; existingAdminId = id; } }
-            document.getElementById('liveCount').innerText = `⚡ ${totalUsers}`;
-            if (currentRole === 'admin' && adminExists && existingAdminId !== myUserId) { alert("Another Driver is already connected."); location.reload(); }
+            document.getElementById('liveCount').innerText = `Port: Active [${totalUsers}]`;
+            if (currentRole === 'admin' && adminExists && existingAdminId !== myUserId) { alert("Root session already active elsewhere."); location.reload(); }
         });
 
         room.on('presence', { event: 'join' }, ({ key, newPresences }) => {
-            if(newPresences[0].name !== myName) renderSystemMessage(`${newPresences[0].name} joined`);
-            if (currentRole === 'admin') room.send({ type: 'broadcast', event: 'sync-history', payload: { feedHistory: adminHistoryLog, chatHistory: chatHistoryLog, chatLocked: isChatLocked } });
+            if(newPresences[0].name !== myName) renderSystemMessage(`Connection established: ${newPresences[0].name}`);
+            if (currentRole === 'admin') {
+                const encryptedFeedLog = adminHistoryLog.map(m => encryptData(m));
+                const encryptedChatLog = chatHistoryLog.map(m => ({...m, text: encryptData(m.text)}));
+                room.send({ type: 'broadcast', event: 'sync-history', payload: { feedHistory: encryptedFeedLog, chatHistory: encryptedChatLog, chatLocked: isChatLocked } });
+            }
         });
 
         room.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
                 await room.track({ role: currentRole, name: myName });
-                document.querySelectorAll('.room-display').forEach(el => el.innerText = `[CH-${code}]`);
+                document.querySelectorAll('.room-display').forEach(el => el.innerText = `[Port: ${code}]`);
             }
         });
     }
 
-    // --- FIX: BASE64 ENCODING FOR PERFECT CODE FORMATTING ---
     const renderer = new marked.Renderer();
     renderer.code = function(arg1) {
         const codeText = typeof arg1 === 'object' ? arg1.text : arg1;
         if (!codeText) return '';
-        
         const base64Code = btoa(unescape(encodeURIComponent(codeText)));
         const displayCode = codeText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        
-        return `<pre><code>${displayCode}</code><button class="copy-code-btn" onclick="copyBase64Snippet('${base64Code}')">Copy Code</button></pre>`;
+        return `<pre><code>${displayCode}</code><button class="copy-code-btn" onclick="copyBase64Snippet('${base64Code}')"><i class='bx bx-copy'></i> Copy</button></pre>`;
     };
     marked.use({ renderer: renderer });
 
     function copyBase64Snippet(base64Text) {
         try {
             const originalText = decodeURIComponent(escape(atob(base64Text)));
-            navigator.clipboard.writeText(originalText).then(() => alert("Code Snippet Copied!"));
-        } catch(e) {
-            console.error("Error decoding snippet", e);
-            alert("Failed to copy code.");
+            navigator.clipboard.writeText(originalText).then(() => alert("Copied to clipboard."));
+        } catch(e) { alert("Clipboard write failed."); }
+    }
+
+    function processIframeCommand(text) {
+        if (text.startsWith('/docs ')) {
+            const url = text.split(' ')[1];
+            if (url && url.startsWith('http')) {
+                return `<div style="padding:10px; background:var(--bg-input); border-radius:4px; border:1px solid var(--border-color);"><b><i class='bx bx-globe'></i> Browser Emulation:</b><br><iframe src="${url}" style="width:100%; height:300px; border:none; margin-top:10px; border-radius:4px; background:#fff;"></iframe></div>`;
+            }
         }
+        return false;
     }
 
     function renderFeedMessage(text) {
         const newMsg = document.createElement('div');
         newMsg.className = 'message-block';
-        newMsg.innerHTML = marked.parse(text); 
+        newMsg.innerHTML = text.includes('<iframe') || text.includes('Browser Emulation') || text.includes('📦') ? text : marked.parse(text); 
         
         const emptyMsg = document.getElementById('emptyFeedMessage');
         if (emptyMsg) emptyMsg.remove();
@@ -518,20 +1013,25 @@
         let text = document.getElementById('adminInput').value;
         if (!text.trim()) return; 
 
-        // --- SMART AUTO-WRAP LOGIC ---
-        if (text.includes('\n') && !text.includes('```')) {
-            text = '```\n' + text + '\n```';
+        let processedText = processIframeCommand(text);
+        if (!processedText) {
+            if (text.includes('\n') && !text.includes('```')) { text = '```\n' + text + '\n```'; }
+            processedText = text;
         }
 
-        room.send({ type: 'broadcast', event: 'board-update', payload: { message: text } });
-        renderFeedMessage(text);
-        adminHistoryLog.push(text); 
+        room.send({ type: 'broadcast', event: 'board-update', payload: { message: encryptData(processedText) } });
+        renderFeedMessage(processedText);
+        adminHistoryLog.push(processedText); 
         document.getElementById('adminInput').value = ''; 
     }
 
     function toggleGhost() {
         isGhostMode = !isGhostMode;
         document.getElementById('ghostToggle').classList.toggle('active', isGhostMode);
+    }
+
+    function handleTypingEvent() {
+        room.send({ type: 'broadcast', event: 'typing', payload: { sender: myName.split(' ')[0] } });
     }
 
     function handleChatEnter(e) { if(e.key === 'Enter') sendChat(); }
@@ -542,27 +1042,30 @@
         let text = input.value.trim();
         if (!text) return;
 
-        // --- SMART AUTO-WRAP LOGIC ---
-        if (text.includes('\n') && !text.includes('```')) {
-            text = '```\n' + text + '\n```';
+        let processedText = processIframeCommand(text);
+        if (!processedText) {
+            if (text.includes('\n') && !text.includes('```')) { text = '```\n' + text + '\n```'; }
+            processedText = text;
         }
 
         const msgId = 'msg-' + Date.now();
-        const payloadData = { id: msgId, sender: myName, text: text, role: currentRole, isGhost: isGhostMode };
+        const payloadData = { id: msgId, sender: myName, text: encryptData(processedText), role: currentRole, isGhost: isGhostMode };
         
-        room.send({ type: 'broadcast', event: 'chat-message', payload: payloadData });
-        renderChatMessage(myName, text, currentRole, msgId, isGhostMode);
-        
-        if(currentRole === 'admin' && !isGhostMode) chatHistoryLog.push(payloadData);
-        
-        if(isGhostMode) {
-            setTimeout(() => {
-                room.send({ type: 'broadcast', event: 'delete-chat', payload: { id: msgId } });
-                const msgEl = document.getElementById(msgId);
-                if(msgEl) msgEl.remove();
-                if(currentRole === 'admin') chatHistoryLog = chatHistoryLog.filter(m => m.id !== msgId);
-            }, 15000); 
-        }
+        setTimeout(() => {
+            room.send({ type: 'broadcast', event: 'chat-message', payload: payloadData });
+            renderChatMessage(myName, processedText, currentRole, msgId, isGhostMode);
+            
+            if(currentRole === 'admin' && !isGhostMode) chatHistoryLog.push({...payloadData, text: processedText});
+            
+            if(isGhostMode) {
+                setTimeout(() => {
+                    room.send({ type: 'broadcast', event: 'delete-chat', payload: { id: msgId } });
+                    const msgEl = document.getElementById(msgId);
+                    if(msgEl) msgEl.remove();
+                    if(currentRole === 'admin') chatHistoryLog = chatHistoryLog.filter(m => m.id !== msgId);
+                }, 15000); 
+            }
+        }, 150); 
         
         input.value = '';
     }
@@ -573,8 +1076,10 @@
         msgDiv.id = id;
         if (role === 'admin') msgDiv.classList.add('chat-admin');
         
-        const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        let html = `<span class="chat-sender">${sender} ${role === 'admin' ? '(Driver)' : ''}</span> ${safeText}`;
+        const isHTML = text.includes('<iframe') || text.includes('Browser Emulation') || text.includes('📦');
+        const safeText = isHTML ? text : text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        let html = `<span class="chat-sender">${sender}</span> ${safeText}`;
         if(isGhost) html += `<span class="ghost-indicator">👻</span>`;
         msgDiv.innerHTML = html;
         
@@ -582,14 +1087,15 @@
         if (emptyMsg) emptyMsg.remove();
         
         const chatDisplay = document.getElementById('chatDisplay');
-        chatDisplay.appendChild(msgDiv);
+        chatDisplay.insertBefore(msgDiv, document.getElementById('typingIndicator'));
         chatDisplay.scrollTop = chatDisplay.scrollHeight;
     }
 
     function renderSystemMessage(msg) {
-        const sysMsg = document.createElement('div'); sysMsg.className = 'sys-msg'; sysMsg.innerText = `— ${msg} —`;
+        const sysMsg = document.createElement('div'); sysMsg.className = 'sys-msg'; sysMsg.innerText = `[${msg}]`;
         const chatDisplay = document.getElementById('chatDisplay');
-        chatDisplay.appendChild(sysMsg); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        chatDisplay.insertBefore(sysMsg, document.getElementById('typingIndicator'));
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
     }
 
     function toggleChatLock() {
@@ -597,7 +1103,7 @@
         isChatLocked = !isChatLocked;
         room.send({ type: 'broadcast', event: 'lock-chat', payload: { locked: isChatLocked } });
         updateChatLockUI();
-        room.send({ type: 'broadcast', event: 'chat-message', payload: { id: 'lock-'+Date.now(), sender: "SYSTEM", text: isChatLocked ? "Driver locked chat." : "Driver unlocked chat.", role: 'admin', isGhost: false } });
+        room.send({ type: 'broadcast', event: 'chat-message', payload: { id: 'lock-'+Date.now(), sender: "root", text: encryptData(isChatLocked ? "Terminal locked by admin." : "Terminal unlocked by admin."), role: 'admin', isGhost: false } });
     }
 
     function updateChatLockUI() {
@@ -605,35 +1111,35 @@
         const btn = document.getElementById('sendChatBtn');
         const lockBtn = document.getElementById('lockChatBtn');
         if (isChatLocked) {
-            if(currentRole !== 'admin') { input.disabled = true; btn.disabled = true; input.placeholder = "Radio silence"; }
-            if(lockBtn) lockBtn.innerText = "Unlock Chat 🔓";
+            if(currentRole !== 'admin') { input.disabled = true; btn.disabled = true; input.placeholder = "Terminal read-only..."; }
+            if(lockBtn) lockBtn.innerHTML = "<i class='bx bx-lock-open-alt'></i> Unlock";
         } else {
-            input.disabled = false; btn.disabled = false; input.placeholder = "Type a message...";
-            if(lockBtn) lockBtn.innerText = "Lock Chat 🔒";
+            input.disabled = false; btn.disabled = false; input.placeholder = "bash: type command...";
+            if(lockBtn) lockBtn.innerHTML = "<i class='bx bx-lock-alt'></i> Lock";
         }
     }
 
     function clearBoard() {
         if (currentRole !== 'admin') return;
         room.send({ type: 'broadcast', event: 'clear-board' });
-        document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Feed cleared by Driver.</div>';
+        document.getElementById('boardDisplay').innerHTML = '<div class="sys-msg">Editor wiped by Admin.</div>';
         adminHistoryLog = [];
     }
 
     function clearChat() {
         if (currentRole !== 'admin') return;
         room.send({ type: 'broadcast', event: 'clear-chat' });
-        document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Chat cleared by Driver.</div>';
+        document.getElementById('chatDisplay').innerHTML = '<div class="sys-msg">Terminal logs cleared.</div><div id="typingIndicator" class="typing-indicator">Process running...</div>';
         chatHistoryLog = [];
     }
 
     function downloadLog() {
-        let content = "--- SUNSET DRIVE: FEED LOG ---\n\n";
+        let content = "/* --- WORKSPACE EDITOR EXPORT --- */\n\n";
         const blocks = document.querySelectorAll('#boardDisplay .message-block');
         for(let i = blocks.length - 1; i >= 0; i--) content += blocks[i].innerText + "\n\n";
         const blob = new Blob([content], { type: 'text/plain' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `Sunset_Drive_Log.txt`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        a.download = `Workspace_Export.txt`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
 </script>
 
